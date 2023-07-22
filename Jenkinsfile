@@ -12,7 +12,7 @@ pipeline {
         stage('Build') {
             steps {
                 // Package the code into a deployment package
-                sh 'zip -r lambda_function.zip *'
+                sh 'zip -r demojenkins.zip *'
             }
         }
 
