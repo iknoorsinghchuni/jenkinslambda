@@ -1,6 +1,12 @@
-public class LambdaMethodHandler {
-    public String handleRequest(String input, Context context) {
-        context.getLogger().log("Input: " + input);
-        return "Hello World - " + input;
+package org.example;
+
+/**
+* Hello world!
+*
+*/
+public class HelloWorld
+{
+    public String handler() {
+        return "Hello World";
     }
 }
