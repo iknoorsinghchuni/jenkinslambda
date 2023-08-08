@@ -1,11 +1,46 @@
-package example.Hello;
-
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.S3Event;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.S3Object;
 
-public class example.Hello implements RequestHandler<Object, String> {
-    public String handleRequest(final Object input, final Context context) {
-        System.out.println(input);
-        return "Hello from LambdaJob! by iknoor";
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.stream.Collectors;
+
+public class MyLambdaFunction implements RequestHandler<S3Event, String> {
+
+    private final AmazonS3 s3Client = AmazonS3ClientBuilder.defaultClient();
+
+    @Override
+    public String handleRequest(S3Event event, Context context) {
+        try {
+            // Retrieve the bucket name and object key from the event
+            String bucket = event.getRecords().get(0).getS3().getBucket().getName();
+            String key = event.getRecords().get(0).getS3().getObject().getKey();
+
+            // Read the content of the object
+            S3Object s3Object = s3Client.getObject(bucket, key);
+            String content = readS3ObjectContent(s3Object.getObjectContent());
+
+            // Log the content to CloudWatch
+            context.getLogger().log("Content of " + key + ": " + content);
+
+            // You can add more processing here based on the content of the object
+
+            return "Lambda function executed successfully.";
+        } catch (Exception e) {
+            context.getLogger().log("An error occurred during execution: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String readS3ObjectContent(InputStream inputStream) throws IOException {
+        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
+            return bufferedReader.lines().collect(Collectors.joining(System.lineSeparator()));
+        }
     }
 }
